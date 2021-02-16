@@ -1,0 +1,23 @@
+[Unit]
+Description=P25 Reflector Service
+# Description=Place this file in /lib/systemd/system
+# Description=N4IRS 01/25/2021
+
+After=netcheck.service
+Requires=netcheck.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartPreventExitStatus=SEGV
+RestartSec=3
+StandardOutput=null
+WorkingDirectory=/opt/P25Reflector
+ExecStartPre = /bin/sh -c 'echo "Starting P25Reflector: [`date +%%T.%%3N`]" >> /var/log/netcheck'
+ExecStart=/opt/P25Gateway/P25Gateway /opt/P25Reflector/P25Reflector.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+
