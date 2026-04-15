@@ -249,6 +249,13 @@ foreach ($allConfigs as $c) {
                         ${location ? `<div style="color: var(--accent-color); font-size: 0.65rem; font-weight: 600;">${location}</div>` : ''}
                     </div>
                 `;
+            } else {
+                html += `
+                    <div class="callsign-tooltip">
+                        <div style="font-weight: 800; color: #94a3b8; font-style: italic; margin-bottom: 2px;">Identity Unknown</div>
+                        <div style="color: rgba(255, 255, 255, 0.4); font-size: 0.65rem; font-weight: 600;">Not categorized in DB</div>
+                    </div>
+                `;
             }
             html += `</div>`;
             return html;
