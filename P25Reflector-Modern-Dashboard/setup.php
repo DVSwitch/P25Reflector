@@ -6,14 +6,6 @@
 
 echo "\n--- DVSwitch Universal Dashboard Setup ---\n\n";
 
-// 1. Get INI Path
-$iniPath = $argv[1] ?? "";
-if (!$iniPath) {
-    echo "Path to Reflector.ini [./Reflector.ini]: ";
-    $iniPath = trim(fgets(STDIN)) ?: "./Reflector.ini";
-}
-
-if (!file_exists($iniPath)) {
 // Extraction Helper
 function prompt($label, $default) {
     echo "$label [$default]: ";
