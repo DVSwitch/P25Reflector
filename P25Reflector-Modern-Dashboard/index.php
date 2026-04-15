@@ -111,22 +111,24 @@ foreach ($allConfigs as $c) {
                         <span>Currently Transmitting</span>
                         <span id="tx-status" class="badge">Idle</span>
                     </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Callsign</th>
-                                <th>Target</th>
-                                <th>Gateway</th>
-                                <th>Duration</th>
-                            </tr>
-                        </thead>
-                        <tbody id="current-tx-body">
-                            <tr>
-                                <td colspan="4" style="text-align:center; color: var(--text-secondary)">Searching
-                                    logs...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Callsign</th>
+                                    <th>Target</th>
+                                    <th>Gateway</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="current-tx-body">
+                                <tr>
+                                    <td colspan="4" style="text-align:center; color: var(--text-secondary)">Searching
+                                        logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -136,20 +138,22 @@ foreach ($allConfigs as $c) {
                             style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); width: 100px;">
                     </div>
                     <div style="max-height: 450px; overflow-y: auto; scrollbar-width: thin; border-radius: 8px;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Time (UTC)</th>
-                                    <th>Callsign</th>
-                                    <th>Target</th>
-                                    <th>Gateway</th>
-                                    <th>Dur</th>
-                                </tr>
-                            </thead>
-                            <tbody id="last-heard-body">
-                                <!-- Populated via JS -->
-                            </tbody>
-                        </table>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time (UTC)</th>
+                                        <th>Callsign</th>
+                                        <th>Target</th>
+                                        <th>Gateway</th>
+                                        <th>Dur</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="last-heard-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
