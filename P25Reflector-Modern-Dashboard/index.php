@@ -20,14 +20,21 @@ if (file_exists($configFile)) {
 $allConfigs = glob(__DIR__ . "/config/*.php");
 $reflectors = [];
 foreach ($allConfigs as $c) {
+    if (basename($c) === 'config.php' && count($allConfigs) > 3) continue; // Skip generic config if we have real ones
+    
     $cName = basename($c, '.php');
-    // Briefly include to get the Title without polluting global scope too much
-    // (In a perfect world we'd parse the file, but this is PHP)
     $lines = file($c);
-    $cTitle = $cName;
+    $cTitle = str_replace('_', ' ', $cName); // Smart fallback: Filename with spaces
+    
     foreach($lines as $line) {
         if (preg_match('/define\("DASHBOARD_TITLE",\s*"(.*?)"\)/', $line, $m)) {
-            $cTitle = $m[1];
+            $titleFromConf = $m[1];
+            // If the title is too generic, append the Name
+            if ($titleFromConf === 'P25 Reflector' || $titleFromConf === 'YSF Reflector' || $titleFromConf === 'NXDN Reflector') {
+                $cTitle = $titleFromConf . " (" . str_replace('_Reflector', '', $cName) . ")";
+            } else {
+                $cTitle = $titleFromConf;
+            }
             break;
         }
     }
@@ -223,7 +230,8 @@ foreach ($allConfigs as $c) {
 
         async function updateDashboard() {
             try {
-                const response = await fetch(`api.php?conf=${CURRENT_CONF}`);
+                const urlParams = new URLSearchParams(window.location.search);
+                const response = await fetch('api.php?' + urlParams.toString());
                 const data = await response.json();
 
                 // Update Mode Badge
