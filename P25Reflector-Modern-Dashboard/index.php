@@ -88,7 +88,7 @@ foreach ($allConfigs as $c) {
                                 </div>
                             </div>
                         <?php endif; ?>
-                        <a href="https://github.com/DVSwitch/P25Reflector/tree/development/P25Reflector-Modern-Dashboard" target="_blank" style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; color: #94a3b8; padding: 5px 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; transition: 0.2s;">
+                        <a href="help.php" style="background: rgba(148, 163, 184, 0.1); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; color: #94a3b8; padding: 5px 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; transition: 0.2s;">
                             Help
                         </a>
                     </div>
