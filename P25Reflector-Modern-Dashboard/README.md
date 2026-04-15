@@ -7,7 +7,9 @@ A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN**
 - **Triple-Check Discovery Engine**: The `setup.php` wizard automatically identifies your infrastructure by scanning binaries, `.ini` headers, and filename patterns simultaneously. 
 - **Multi-Tenant Switcher**: Host unlimited reflectors from a single codebase. Instantly swap dashboards using the global "Switcher" menu without reloading the page.
 - **Tenant-Aware Telemetry**: The UI automatically surfaces the Active Profile and active network port.
-- **Enhanced User Identity**: Hover-activated tooltips projecting from callsigns expose Name and Location from a high-speed SQLite database. Built with a global downward-drop physics engine to guarantee tooltips remain visible on all screen sizes without triggering horizontal scrollbars.
+- **Enhanced User Identity**: Hover-activated tooltips projecting from callsigns expose Name and Location from a high-speed SQLite database. Built with a global downward-drop physics engine to guarantee tooltips remain visible on all screen sizes without triggering horizontal scrollbars. If a user is not mapped, an elegant diagnostic fallback is displayed.
+- **Dynamic ID Translation**: Unmapped numeric network IDs (e.g., DMR IDs) appearing in the data stream are instantaneously intercepted and translated into alphanumeric Callsigns via the SQLite database, ensuring clean UI presentation and preserving accurate QRZ lookups.
+- **Local Documentation Engine**: Includes an integrated `help.php` web portal that intercepts the local `README.md` and visually parses it into a rich, responsive experience via a client-side markdown interpreter, ensuring documentation matches your native deployment version perfectly.
 - **Glassmorphism UI**: A premium, responsive design with "Command Center" aesthetics and live pulsating status indicators.
 
 ## System Requirements
