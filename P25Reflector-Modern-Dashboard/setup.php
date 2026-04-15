@@ -53,6 +53,26 @@ $logo = prompt("Logo Filename (in root)", "DVSwitch.png");
 echo "\n--- Reflector Connection ---\n";
 $prefix = prompt("Log Prefix", $detectedPrefix);
 $logPath = prompt("Log File Directory", $detectedLogPath);
+
+// Validation: Check if logs exist for this prefix
+$logFiles = glob(rtrim($logPath, '/') . '/' . $prefix . '-*.log');
+if (empty($logFiles)) {
+    echo "\n[!] Warning: No log files found matching prefix '$prefix' in '$logPath'\n";
+    $available = glob(rtrim($logPath, '/') . '/*-*.log');
+    if (!empty($available)) {
+        echo "Found other log prefixes in that directory:\n";
+        $prefixes = [];
+        foreach ($available as $f) {
+            if (preg_match('/^(.*?)-\d{4}-\d{2}-\d{2}\.log$/', basename($f), $m)) $prefixes[] = $m[1];
+        }
+        $prefixes = array_unique($prefixes);
+        foreach ($prefixes as $p) echo "  - $p\n";
+        
+        $newPrefix = prompt("Would you like to use one of these instead?", $prefixes[0]);
+        $prefix = $newPrefix;
+    }
+}
+
 $binPath = prompt("Reflector Binary Directory", $iniDir);
 $iniDirPath = prompt("Reflector INI Directory", $iniDir);
 $iniFileName = prompt("Reflector INI Filename", $iniFile);
