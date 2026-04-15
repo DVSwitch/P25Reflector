@@ -27,6 +27,7 @@ include "config/config.php";
                 </div>
             </div>
             <div class="status-badge">
+                <div id="mode-badge" class="badge">--</div>
                 <div class="status-dot"></div>
                 <span id="system-time">--:--:--</span>
             </div>
@@ -112,6 +113,10 @@ include "config/config.php";
                 <div class="card" style="margin-top: 2rem; background: rgba(56, 189, 248, 0.05)">
                     <div class="card-title" style="font-size: 0.875rem">System Stats</div>
                     <ul id="system-stats-list" style="list-style: none; font-size: 0.875rem; color: var(--text-secondary)">
+                        <li id="row-port" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                            <span>Network Port</span>
+                            <span id="sys-port" style="color: var(--text-primary)">--</span>
+                        </li>
                         <li id="row-temp" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
                             <span>CPU Temp</span>
                             <span id="sys-temp" style="color: var(--text-primary)">--</span>
@@ -119,6 +124,10 @@ include "config/config.php";
                         <li id="row-load" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
                             <span>System Load</span>
                             <span id="sys-load" style="color: var(--text-primary)">--</span>
+                        </li>
+                        <li id="row-checkin" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                            <span>Last Check-in</span>
+                            <span id="sys-checkin" style="color: var(--text-primary)">--</span>
                         </li>
                         <li id="row-uptime" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
                             <span>Uptime</span>
@@ -149,6 +158,13 @@ include "config/config.php";
                 const response = await fetch('api.php');
                 const data = await response.json();
 
+                // Update Mode Badge
+                const modeBadge = document.getElementById('mode-badge');
+                if (data.mode) {
+                    modeBadge.innerText = data.mode;
+                    modeBadge.className = 'badge badge-' + data.mode.toLowerCase();
+                }
+
                 // Update System Time
                 document.getElementById('system-time').innerText = data.timestamp;
 
@@ -156,7 +172,9 @@ include "config/config.php";
                 const stats = {
                     'temp': data.system.temp,
                     'load': data.system.load,
-                    'uptime': data.system.uptime
+                    'uptime': data.system.uptime,
+                    'port': data.system.port,
+                    'checkin': data.last_checkin ? data.last_checkin.split(' ')[1] : '--'
                 };
 
                 for (const [key, value] of Object.entries(stats)) {

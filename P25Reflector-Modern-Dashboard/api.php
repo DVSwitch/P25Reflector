@@ -13,42 +13,49 @@ error_reporting(0);
 /**
  * Security: Sanitize all outputs for XSS prevention
  */
-function sanitize($data) {
+function sanitize($data)
+{
     if (is_array($data)) {
         return array_map('sanitize', $data);
     }
-    if (is_bool($data)) return $data;
+    if (is_bool($data))
+        return $data;
     return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
 }
 
 /**
  * Optimization: Efficiently tail the log file
  */
-function tailLog($lines = 500) {
-    $logPath = P25REFLECTORLOGPATH . "/" . P25REFLECTORLOGPREFIX . "-" . date("Y-m-d") . ".log";
-    
+function tailLog($lines = 500)
+{
+    $logPath = REFLECTOR_LOG_PATH . "/" . REFLECTOR_LOG_PREFIX . "-" . date("Y-m-d") . ".log";
+
     // Fallback: If today's log doesn't exist, find the most recent one matching the prefix
     if (!file_exists($logPath)) {
-        $logs = glob(P25REFLECTORLOGPATH . "/" . P25REFLECTORLOGPREFIX . "-*.log");
-        if (empty($logs)) return [];
-        usort($logs, function($a, $b) { return filemtime($b) - filemtime($a); });
+        $logs = glob(REFLECTOR_LOG_PATH . "/" . REFLECTOR_LOG_PREFIX . "-*.log");
+        if (empty($logs))
+            return [];
+        usort($logs, function ($a, $b) {
+            return filemtime($b) - filemtime($a); });
         $logPath = $logs[0];
     }
-    
-    if (!file_exists($logPath)) return [];
-    
+
+    if (!file_exists($logPath))
+        return [];
+
     // Using PHP's native file functions with a limit is safer than exec/backticks
     $file = new SplFileObject($logPath, 'r');
     $file->seek(PHP_INT_MAX);
     $totalLines = $file->key();
-    
+
     $start = max(0, $totalLines - $lines);
     $file->seek($start);
-    
+
     $output = [];
     while (!$file->eof()) {
         $line = $file->fgets();
-        if (trim($line)) $output[] = $line;
+        if (trim($line))
+            $output[] = $line;
     }
     return $output;
 }
@@ -56,20 +63,23 @@ function tailLog($lines = 500) {
 /**
  * Robust log scanner: Finds the last N transmissions by scanning backwards
  */
-function getRecentTransmissions($count = 50) {
+function getRecentTransmissions($count = 50)
+{
     $heardList = [];
-    $logs = glob(P25REFLECTORLOGPATH . "/" . P25REFLECTORLOGPREFIX . "-*.log");
-    if (empty($logs)) return [];
-    usort($logs, function($a, $b) { return filemtime($b) - filemtime($a); });
+    $logs = glob(REFLECTOR_LOG_PATH . "/" . REFLECTOR_LOG_PREFIX . "-*.log");
+    if (empty($logs))
+        return [];
+    usort($logs, function ($a, $b) {
+        return filemtime($b) - filemtime($a); });
 
     foreach ($logs as $logPath) {
         $file = new SplFileObject($logPath, 'r');
         $file->seek(PHP_INT_MAX);
         $totalLines = $file->key();
-        
+
         // Read in chunks of 1000 lines backwards
         $chunkSize = 1000;
-        $tempEndTime = null; 
+        $tempEndTime = null;
 
         for ($pos = $totalLines; $pos >= 0; $pos -= $chunkSize) {
             $start = max(0, $pos - $chunkSize);
@@ -78,7 +88,7 @@ function getRecentTransmissions($count = 50) {
             for ($i = 0; $i < $chunkSize && !$file->eof(); $i++) {
                 $lines[] = $file->fgets();
             }
-            
+
             // Process lines in reverse for this chunk
             for ($i = count($lines) - 1; $i >= 0; $i--) {
                 $line = $lines[$i];
@@ -93,7 +103,7 @@ function getRecentTransmissions($count = 50) {
                     if (preg_match('/M: ([\d\s:.-]+) Transmission from\s+(.*?)\s+at\s+(.*?)\s+to\s+(.*)/', $line, $matches)) {
                         $startTimeStr = trim($matches[1]);
                         $duration = "--";
-                        
+
                         if ($tempEndTime) {
                             $start = new DateTime(substr($startTimeStr, 0, 19), new DateTimeZone('UTC'));
                             $end = new DateTime($tempEndTime, new DateTimeZone('UTC'));
@@ -112,7 +122,8 @@ function getRecentTransmissions($count = 50) {
                             'duration' => $duration
                         ];
                         $tempEndTime = null; // Reset for next one
-                        if (count($heardList) >= $count) break 3;
+                        if (count($heardList) >= $count)
+                            break 3;
                     }
                 }
             }
@@ -124,9 +135,11 @@ function getRecentTransmissions($count = 50) {
 /**
  * Parsing Logic (Combined)
  */
-function getDashboardData() {
+function getDashboardData()
+{
+    $prefix = REFLECTOR_LOG_PREFIX;
     $logLines = tailLog(500); // For active status and gateways
-    
+
     $gateways = [];
     $transmitting = null;
     $now = new DateTime('now', new DateTimeZone('UTC'));
@@ -148,15 +161,15 @@ function getDashboardData() {
 
         // Transmission started (Active)
         if (strpos($line, "Transmission from") !== false) {
-             if (preg_match('/M: ([\d\s:.-]+) Transmission from\s+(.*?)\s+at\s+(.*?)\s+to\s+(.*)/', $line, $matches)) {
-                 $transmitting = [
+            if (preg_match('/M: ([\d\s:.-]+) Transmission from\s+(.*?)\s+at\s+(.*?)\s+to\s+(.*)/', $line, $matches)) {
+                $transmitting = [
                     'time' => trim($matches[1]),
                     'callsign' => trim($matches[2]),
                     'gateway' => trim($matches[3]),
                     'target' => trim($matches[4]),
                     'active' => true
-                 ];
-             }
+                ];
+            }
         }
 
         // Transmission ended
@@ -172,11 +185,20 @@ function getDashboardData() {
             unset($gateways[$m[1]]);
         }
         if (preg_match('/M: [\d\s:.-]+\s+(\S+)\s+:\s+([\d.:]+)/', $line, $m)) {
-             $gateways[$m[1]] = ['callsign' => trim($m[1]), 'last_seen' => substr($line, 3, 19)];
+            $gateways[$m[1]] = ['callsign' => trim($m[1]), 'last_seen' => substr($line, 3, 19)];
+        }
+
+        // Track DVREFCK specifically
+        if (strpos($line, "DVREFCK") !== false) {
+            $lastCheckin = substr($line, 3, 19);
         }
     }
 
+    $mode = explode('_', $prefix)[0];
+
     return [
+        'mode' => strtoupper($mode),
+        'last_checkin' => isset($lastCheckin) ? $lastCheckin : null,
         'transmitting' => $transmitting,
         'heard' => $heardList,
         'gateways' => array_values($gateways),
@@ -188,19 +210,32 @@ function getDashboardData() {
 /**
  * System Data: Get CPU temp, load, etc.
  */
-function getSystemData() {
+function getSystemData()
+{
     $data = [
         'temp' => '--',
         'load' => '--',
-        'uptime' => '--'
+        'uptime' => '--',
+        'port' => '--'
     ];
+
+    // Reflector Port from INI
+    if (defined("REFLECTOR_INI_PATH") && defined("REFLECTOR_INI_FILE")) {
+        $iniPath = rtrim(REFLECTOR_INI_PATH, '/') . '/' . REFLECTOR_INI_FILE;
+        if (file_exists($iniPath)) {
+            $iniContent = file_get_contents($iniPath);
+            if (preg_match('/^\s*Port\s*=\s*(\d+)/m', $iniContent, $matches)) {
+                $data['port'] = $matches[1];
+            }
+        }
+    }
     
     // CPU Temp
     if (file_exists("/sys/class/thermal/thermal_zone0/temp")) {
         $temp = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
         $data['temp'] = round($temp / 1000, 1) . '°C';
     }
-    
+
     // Load Average
     if (file_exists("/proc/loadavg")) {
         $load = explode(' ', file_get_contents("/proc/loadavg"));
@@ -214,11 +249,11 @@ function getSystemData() {
         $hours = floor(($uptime % 86400) / 3600);
         $data['uptime'] = ($days > 0 ? $days . 'd ' : '') . $hours . 'h';
     }
-    
+
     return $data;
 }
 
-$data = getDashboardData();
+$data = getDashboardData(REFLECTOR_LOG_PREFIX);
 $data['system'] = getSystemData();
 echo json_encode(sanitize($data));
 ?>
