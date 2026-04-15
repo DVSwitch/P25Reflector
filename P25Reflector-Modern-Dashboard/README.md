@@ -10,6 +10,18 @@ A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN**
 - **High Performance API**: Secure JSON-based log tailing without `exec()` or fragile shell commands.
 - **Pretty URLs**: Support for clean paths (e.g., `https://domain.com/P25_NA`) via `.htaccess`.
 
+## System Requirements
+To ensure all features (including the ID database and Pretty URLs) work correctly, the following PHP modules are required:
+- `php-cli` (to run the setup and database updater)
+- `php-sqlite3` (for high-speed user ID lookups)
+- `php-curl` (to download the latest ID databases)
+- `php-mbstring` (for international character support)
+
+**Ubuntu/Debian Installation (PHP 8.3 example):**
+```bash
+sudo apt install php8.3-cli php8.3-sqlite3 php8.3-curl php8.3-mbstring
+```
+
 ## Installation
 
 1. **Clone the repository** to your web server:
@@ -28,14 +40,20 @@ A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN**
    php setup.php /path/to/Reflector.ini
    ```
 
-3. **Configure Permissions**:
-   Ensure the `config/` directory is writable by your web server if you want to use the setup script to save profiles.
+3. **Initialize the User ID Database**:
+   Download the latest DMR and NXDN user lists from RadioID.net and populate your local cache:
+   ```bash
+   php update_db.php
+   ```
+
+4. **Configure Permissions**:
+   Ensure the `config/` and `db/` directories are writable by your web server.
    ```bash
    chmod -R 755 config/
+   chmod -R 777 db/
    ```
 
 ## Usage
-
 - **Main Dashboard**: Open your browser to the root directory. If you have multiple profiles, use the **Switch ▼** menu in the header.
 - **Direct Access**: Access specific reflectors directly via `?conf=ProfileName` or via pretty URLs if using Apache: `https://yourdomain.com/ProfileName`.
 
