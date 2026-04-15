@@ -102,9 +102,9 @@ h1 {
 
 .callsign-tooltip {
     position: absolute;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
+    top: 50%;
+    left: 110%;
+    transform: translateY(-50%) translateX(10px);
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
@@ -121,25 +121,26 @@ h1 {
     color: #fff;
     font-size: 0.75rem;
     line-height: 1.4;
-    text-align: center;
+    text-align: left;
 }
 
 .callsign-container:hover .callsign-tooltip {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(-50%) translateX(0);
 }
 
 .callsign-tooltip::after {
     content: '';
     position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
+    top: 50%;
+    right: 100%;
+    margin-top: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: var(--glass-border) transparent transparent transparent;
+    border-color: transparent var(--glass-border) transparent transparent;
 }
+
 
 .grid {
     display: grid;
