@@ -24,25 +24,33 @@ if (is_dir($path)) {
         if ($file->getExtension() === 'ini') {
             $content = file_get_contents($file->getPathname());
             
-            // The Reflector Signature: Has [Log], FileRoot, a Mode Section, NO [Modem]
-            $hasLog = (strpos($content, '[Log]') !== false && strpos($content, 'FileRoot=') !== false);
-            $hasMode = (preg_match('/\[(P25|YSF|NXDN|DMR)\]/', $content));
+            // The Reflector Signature (Flexible): Has [Log], FileRoot, a Mode Section, NO [Modem]
+            $hasLog = (preg_match('/\[Log\]/i', $content) && preg_match('/FileRoot\s*=/i', $content));
+            $hasMode = (preg_match('/\[(P25|YSF|NXDN|DMR|General)\]/i', $content));
             $isNotNode = (strpos($content, '[Modem]') === false);
             
             if ($hasLog && $hasMode && $isNotNode) {
-                // Parse basic info
-                $ini = parse_ini_string($content, true);
+                // Use a more robust INI parser replacement
+                $lines = explode("\n", $content);
                 $mode = 'Generic';
-                if (isset($ini['P25'])) $mode = 'P25';
-                if (isset($ini['YSF'])) $mode = 'YSF';
-                if (isset($ini['NXDN'])) $mode = 'NXDN';
-                if (isset($ini['DMR'])) $mode = 'DMR';
+                foreach ($lines as $line) {
+                    if (preg_match('/^\[(P25|YSF|NXDN|DMR)\]/i', trim($line), $m)) $mode = strtoupper($m[1]);
+                }
+
+                // Extract actual prefix from FileRoot
+                $prefix = basename($file->getFilename(), '.ini');
+                foreach ($lines as $line) {
+                    if (preg_match('/^\s*FileRoot\s*=\s*(.*)/i', $line, $pm)) {
+                        $prefix = trim($pm[1]);
+                        break;
+                    }
+                }
 
                 $reflectorsFound[] = [
                     'path' => $file->getRealPath(),
                     'dir' => $file->getPath(),
                     'file' => $file->getFilename(),
-                    'prefix' => $ini['Log']['FileRoot'] ?? basename($file->getFilename(), '.ini'),
+                    'prefix' => $prefix,
                     'mode' => $mode
                 ];
             }
