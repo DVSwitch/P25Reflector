@@ -1,5 +1,38 @@
 <?php
-include "config/config.php";
+// Multi-Config discovery
+$conf = isset($_GET['conf']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['conf']) : 'config';
+$configFile = __DIR__ . "/config/{$conf}.php";
+
+// Load the selected config
+if (file_exists($configFile)) {
+    include $configFile;
+} else {
+    $altConfigs = glob(__DIR__ . "/config/*.php");
+    if (!empty($altConfigs)) {
+        include $altConfigs[0];
+        $conf = basename($altConfigs[0], '.php');
+    } else {
+        die("Setup required. Please run setup.php");
+    }
+}
+
+// Map of all available reflectors for the switcher
+$allConfigs = glob(__DIR__ . "/config/*.php");
+$reflectors = [];
+foreach ($allConfigs as $c) {
+    $cName = basename($c, '.php');
+    // Briefly include to get the Title without polluting global scope too much
+    // (In a perfect world we'd parse the file, but this is PHP)
+    $lines = file($c);
+    $cTitle = $cName;
+    foreach($lines as $line) {
+        if (preg_match('/define\("DASHBOARD_TITLE",\s*"(.*?)"\)/', $line, $m)) {
+            $cTitle = $m[1];
+            break;
+        }
+    }
+    $reflectors[] = ['id' => $cName, 'title' => $cTitle];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,14 +49,33 @@ include "config/config.php";
     <div class="container">
         <header>
             <div class="logo-section">
-                <?php 
-                if(defined("LOGO") && LOGO != "" && LOGO != "none") { 
-                    echo '<img src="'.LOGO.'" alt="Logo">'; 
-                } 
-                ?>
+                <?php if (defined("LOGO") && LOGO != "" && LOGO != "none"): ?>
+                    <img src="<?php echo LOGO; ?>" alt="DVSwitch Logo">
+                <?php endif; ?>
                 <div>
-                    <h1><?php echo DASHBOARD_TITLE; ?></h1>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary)"><?php echo DASHBOARD_SUBTITLE; ?></p>
+                    <div style="display: flex; align-items: center; gap: 1rem">
+                        <h1 style="font-size: 1.75rem; font-weight: 800; letter-spacing: -0.02em;">
+                            <?php echo DASHBOARD_TITLE; ?>
+                        </h1>
+                        <?php if (count($reflectors) > 1): ?>
+                        <div class="switcher-dropdown">
+                            <button class="switcher-btn" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; color: var(--accent-color); padding: 5px 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                                <?php echo $conf; ?> <span style="font-size: 0.6rem; margin-left: 4px;">▼</span>
+                            </button>
+                            <div class="switcher-content">
+                                <div style="padding: 0.75rem 1rem; font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase;">Select Reflector</div>
+                                <?php foreach ($reflectors as $r): ?>
+                                    <a href="?conf=<?php echo $r['id']; ?>" class="<?php echo ($conf == $r['id']) ? 'active' : ''; ?>">
+                                        <?php echo $r['title']; ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; opacity: 0.8;">
+                        <?php echo DASHBOARD_SUBTITLE; ?>
+                    </p>
                 </div>
             </div>
             <div class="status-badge">
@@ -153,9 +205,11 @@ include "config/config.php";
             if (!SHOW_QRZ) return `<span class="callsign">${call}</span>`;
             return `<a href="https://qrz.com/db/${call}" target="_blank" class="callsign" style="text-decoration: none; color: var(--accent-primary)">${call}</a>`;
         }
+        const CURRENT_CONF = "<?php echo $conf; ?>";
+
         async function updateDashboard() {
             try {
-                const response = await fetch('api.php');
+                const response = await fetch(`api.php?conf=${CURRENT_CONF}`);
                 const data = await response.json();
 
                 // Update Mode Badge

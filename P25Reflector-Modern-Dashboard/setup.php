@@ -14,76 +14,89 @@ if (!$iniPath) {
 }
 
 if (!file_exists($iniPath)) {
-    echo "Warning: Reflector.ini not found at $iniPath. You will need to enter settings manually.\n";
-    $iniContent = "";
-    $iniDir = "./";
-    $iniFile = "Reflector.ini";
-} else {
-    echo "Found INI at $iniPath. Auto-detecting settings...\n";
-    $iniContent = file_get_contents($iniPath);
-    $iniDir = dirname(realpath($iniPath)) . "/";
-    $iniFile = basename($iniPath);
-}
-
 // Extraction Helper
-function getVal($content, $key) {
-    if (preg_match('/^\s*' . $key . '\s*=\s*(.*)/m', $content, $matches)) {
-        return trim($matches[1]);
-    }
-    return null;
-}
-
-// 2. Auto-detect core settings
-$detectedPrefix = getVal($iniContent, "FileRoot") ?: "P25_NA";
-$detectedLogPath = getVal($iniContent, "FilePath") ?: "./logs";
-$mode = strtoupper(explode('_', $detectedPrefix)[0]);
-
-// 3. Interactive Prompts
 function prompt($label, $default) {
     echo "$label [$default]: ";
     $input = trim(fgets(STDIN));
     return $input ?: $default;
 }
 
-echo "\n--- Dashboard Identity ---\n";
-$title = prompt("Dashboard Title", "$mode Reflector");
-$subtitle = prompt("Dashboard Subtitle", "Real-time Network Monitoring");
-$logo = prompt("Logo Filename (in root)", "DVSwitch.png");
+// Check for Bulk Mode vs Single File
+$path = $argv[1] ?? "./";
+$reflectorsFound = [];
 
-echo "\n--- Reflector Connection ---\n";
-$prefix = prompt("Log Prefix", $detectedPrefix);
-$logPath = prompt("Log File Directory", $detectedLogPath);
+if (is_dir($path)) {
+    echo "Scanning '$path' for reflectors...\n";
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+    foreach ($files as $file) {
+        if ($file->getExtension() === 'ini') {
+            $content = file_get_contents($file->getPathname());
+            
+            // The Reflector Signature: Has [Log], FileRoot, a Mode Section, NO [Modem]
+            $hasLog = (strpos($content, '[Log]') !== false && strpos($content, 'FileRoot=') !== false);
+            $hasMode = (preg_match('/\[(P25|YSF|NXDN|DMR)\]/', $content));
+            $isNotNode = (strpos($content, '[Modem]') === false);
+            
+            if ($hasLog && $hasMode && $isNotNode) {
+                // Parse basic info
+                $ini = parse_ini_string($content, true);
+                $mode = 'Generic';
+                if (isset($ini['P25'])) $mode = 'P25';
+                if (isset($ini['YSF'])) $mode = 'YSF';
+                if (isset($ini['NXDN'])) $mode = 'NXDN';
+                if (isset($ini['DMR'])) $mode = 'DMR';
 
-// Validation: Check if logs exist for this prefix
-$logFiles = glob(rtrim($logPath, '/') . '/' . $prefix . '-*.log');
-if (empty($logFiles)) {
-    echo "\n[!] Warning: No log files found matching prefix '$prefix' in '$logPath'\n";
-    $available = glob(rtrim($logPath, '/') . '/*-*.log');
-    if (!empty($available)) {
-        echo "Found other log prefixes in that directory:\n";
-        $prefixes = [];
-        foreach ($available as $f) {
-            if (preg_match('/^(.*?)-\d{4}-\d{2}-\d{2}\.log$/', basename($f), $m)) $prefixes[] = $m[1];
+                $reflectorsFound[] = [
+                    'path' => $file->getRealPath(),
+                    'dir' => $file->getPath(),
+                    'file' => $file->getFilename(),
+                    'prefix' => $ini['Log']['FileRoot'] ?? basename($file->getFilename(), '.ini'),
+                    'mode' => $mode
+                ];
+            }
         }
-        $prefixes = array_unique($prefixes);
-        foreach ($prefixes as $p) echo "  - $p\n";
-        
-        $newPrefix = prompt("Would you like to use one of these instead?", $prefixes[0]);
-        $prefix = $newPrefix;
     }
+} else {
+    // Single file logic (legacy)
+    $reflectorsFound[] = [
+        'path' => realpath($path),
+        'dir' => dirname(realpath($path)),
+        'file' => basename($path),
+        'prefix' => 'Reflector',
+        'mode' => 'P25'
+    ];
 }
 
-$binPath = prompt("Reflector Binary Directory", $iniDir);
-$iniDirPath = prompt("Reflector INI Directory", $iniDir);
-$iniFileName = prompt("Reflector INI Filename", $iniFile);
+if (empty($reflectorsFound)) {
+    die("Error: No reflectors found in '$path'.\n");
+}
 
-echo "\n--- UI Features ---\n";
-$showQRZ = prompt("Enable QRZ.com links? (1/0)", "1");
-$showStats = prompt("Show System Stats card? (1/0)", "1");
-$showPulse = prompt("Show Network Pulse log? (1/0)", "1");
+echo "\nDiscovered " . count($reflectorsFound) . " Reflector(s):\n";
+foreach ($reflectorsFound as $i => $r) {
+    echo "[" . ($i + 1) . "] {$r['mode']} - {$r['file']} (Prefix: {$r['prefix']})\n";
+}
 
-// 4. Generate Config
-$configTemplate = <<<EOD
+$selection = prompt("\nSelect reflectors to configure (e.g. 1,2 or 'all')", "all");
+$selectedIndices = [];
+if ($selection === 'all') {
+    $selectedIndices = range(0, count($reflectorsFound) - 1);
+} else {
+    foreach (explode(',', $selection) as $idx) $selectedIndices[] = (int)trim($idx) - 1;
+}
+
+$logPathDefault = "/var/log/mmdvm";
+$logPath = prompt("\nBase directory for logs", $logPathDefault);
+
+foreach ($selectedIndices as $idx) {
+    if (!isset($reflectorsFound[$idx])) continue;
+    $r = $reflectorsFound[$idx];
+    
+    echo "\nConfiguring {$r['file']}...\n";
+    $confName = prompt("  Configuration Profile Name", $r['prefix']);
+    $title = prompt("  Dashboard Title", "{$r['mode']} Reflector");
+    $prefix = prompt("  Log Prefix", $r['prefix']);
+    
+    $configTemplate = <<<EOD
 <?php
 /**
  * DVSwitch Universal Reflector Dashboard Configuration
@@ -92,52 +105,43 @@ $configTemplate = <<<EOD
 
 date_default_timezone_set('UTC');
 
-// --- 1. Branding & Identity ---
 define("DASHBOARD_TITLE", "%s");
-define("DASHBOARD_SUBTITLE", "%s");
-define("LOGO", "%s");
+define("DASHBOARD_SUBTITLE", "Real-time %s Monitoring");
+define("LOGO", "DVSwitch.png");
 
-// --- 2. Reflector Connection ---
 define("REFLECTOR_LOG_PREFIX", "%s");
 define("REFLECTOR_LOG_PATH", "%s");
-define("REFLECTOR_INI_PATH", "%s");
+define("REFLECTOR_INI_PATH", "%s/");
 define("REFLECTOR_INI_FILE", "%s");
-define("REFLECTOR_BIN_PATH", "%s");
+define("REFLECTOR_BIN_PATH", "%s/");
 
-// --- 3. UI Features ---
-define("SHOWQRZ", "%s");
-define("SHOW_SYSTEM_STATS", "%s");
-define("SHOW_NETWORK_PULSE", "%s");
+define("SHOWQRZ", "1");
+define("SHOW_SYSTEM_STATS", "1");
+define("SHOW_NETWORK_PULSE", "1");
 
-// --- 4. Advanced Settings ---
 define("API_REFRESH_INTERVAL", "2000");
 define("LAST_HEARD_COUNT", "50");
 define("TEMPERATUREHIGHLEVEL", "60");
 ?>
 EOD;
 
-$configOutput = sprintf(
-    $configTemplate,
-    date('Y-m-d H:i:s'),
-    $title,
-    $subtitle,
-    $logo,
-    $prefix,
-    $logPath,
-    $iniDirPath,
-    $iniFileName,
-    $binPath,
-    $showQRZ,
-    $showStats,
-    $showPulse
-);
+    $configOutput = sprintf(
+        $configTemplate,
+        date('Y-m-d H:i:s'),
+        $title,
+        $r['mode'],
+        $prefix,
+        $logPath,
+        $r['dir'],
+        $r['file'],
+        $r['dir']
+    );
 
-$targetFile = __DIR__ . "/config/config.php";
-echo "\nWriting configuration to $targetFile...\n";
-
-if (file_put_contents($targetFile, $configOutput)) {
-    echo "Success! Your dashboard is configured and ready.\n\n";
-} else {
-    echo "Error: Could not write to $targetFile. Please check permissions.\n\n";
+    $targetFile = __DIR__ . "/config/{$confName}.php";
+    file_put_contents($targetFile, $configOutput);
+    echo "  >> Generated config/{$confName}.php\n";
 }
+
+echo "\nDone! All selected reflectors have been configured.\n\n";
+
 ?>

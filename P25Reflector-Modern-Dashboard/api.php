@@ -5,7 +5,22 @@
  */
 
 header('Content-Type: application/json');
-include "config/config.php";
+
+// Multi-Config Loader
+$conf = isset($_GET['conf']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_GET['conf']) : 'config';
+$configFile = __DIR__ . "/config/{$conf}.php";
+
+if (file_exists($configFile)) {
+    include $configFile;
+} else {
+    // Attempt to load the first available config if default 'config.php' is missing
+    $altConfigs = glob(__DIR__ . "/config/*.php");
+    if (!empty($altConfigs)) {
+        include $altConfigs[0];
+    } else {
+        die(json_encode(['error' => 'No configuration found. Please run setup.php']));
+    }
+}
 
 // Set error handling to return JSON instead of HTML
 error_reporting(0);
@@ -98,10 +113,21 @@ function getRecentTransmissions($count = 50)
                     $tempEndTime = substr($line, 3, 19);
                 }
 
-                if (strpos($line, "Transmission from") !== false) {
-                    // Match Time, Callsign (after from), Gateway (after at), and Target (after to)
-                    if (preg_match('/M: ([\d\s:.-]+) Transmission from\s+(.*?)\s+at\s+(.*?)\s+to\s+(.*)/', $line, $matches)) {
+                if (strpos($line, "Transmission from") !== false || strpos($line, "Received data from") !== false) {
+                    // Match Time, Callsign, Gateway, and Target. Support both P25/NXDN and YSF formats.
+                    if (preg_match('/M: ([\d\s:.-]+) (?:Transmission from|Received data from)\s+(.*?)\s+(?:at|to)\s+(.*?)\s+(?:to|at)\s+(.*)/', $line, $matches)) {
                         $startTimeStr = trim($matches[1]);
+                        $callsign = trim($matches[2]);
+                        
+                        // YSF format: from (2) to (3) at (4)
+                        // P25 format: from (2) at (3) to (4)
+                        if (strpos($line, "Received data") !== false) {
+                            $target = trim($matches[3]);
+                            $gateway = trim($matches[4]);
+                        } else {
+                            $gateway = trim($matches[3]);
+                            $target = trim($matches[4]);
+                        }
                         $duration = "--";
 
                         if ($tempEndTime) {
@@ -160,13 +186,22 @@ function getDashboardData()
         }
 
         // Transmission started (Active)
-        if (strpos($line, "Transmission from") !== false) {
-            if (preg_match('/M: ([\d\s:.-]+) Transmission from\s+(.*?)\s+at\s+(.*?)\s+to\s+(.*)/', $line, $matches)) {
+        if (strpos($line, "Transmission from") !== false || strpos($line, "Received data from") !== false) {
+            if (preg_match('/M: ([\d\s:.-]+) (?:Transmission from|Received data from)\s+(.*?)\s+(?:at|to)\s+(.*?)\s+(?:to|at)\s+(.*)/', $line, $matches)) {
+                $callsign = trim($matches[2]);
+                if (strpos($line, "Received data") !== false) {
+                    $target = trim($matches[3]);
+                    $gateway = trim($matches[4]);
+                } else {
+                    $gateway = trim($matches[3]);
+                    $target = trim($matches[4]);
+                }
+
                 $transmitting = [
                     'time' => trim($matches[1]),
-                    'callsign' => trim($matches[2]),
-                    'gateway' => trim($matches[3]),
-                    'target' => trim($matches[4]),
+                    'callsign' => $callsign,
+                    'gateway' => $gateway,
+                    'target' => $target,
                     'active' => true
                 ];
             }
