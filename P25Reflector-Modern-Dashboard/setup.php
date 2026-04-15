@@ -34,7 +34,11 @@ if (is_dir($path)) {
                 $lines = explode("\n", $content);
                 $mode = 'Generic';
                 foreach ($lines as $line) {
-                    if (preg_match('/^\[(P25|YSF|NXDN|DMR)\]/i', trim($line), $m)) $mode = strtoupper($m[1]);
+                    $trimLine = trim($line);
+                    if (preg_match('/\[.*?(P25|YSF|NXDN|DMR).*?\]/i', $trimLine, $m)) {
+                        $mode = strtoupper($m[1]);
+                        break;
+                    }
                 }
 
                 // Extract actual prefix from FileRoot
