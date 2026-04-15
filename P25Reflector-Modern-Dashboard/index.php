@@ -212,8 +212,9 @@ foreach ($allConfigs as $c) {
     <script>
         const SHOW_QRZ = <?php echo (defined("SHOWQRZ") && SHOWQRZ == "1") ? "true" : "false"; ?>;
 
-        function formatCallsign(call, name, location) {
-            let html = `<div class="callsign-container">`;
+        function formatCallsign(call, name, location, isLeft = false) {
+            let containerClass = isLeft ? "callsign-container tooltip-left" : "callsign-container";
+            let html = `<div class="${containerClass}">`;
             if (SHOW_QRZ) {
                 html += `<a href="https://qrz.com/db/${call}" target="_blank" class="callsign" style="text-decoration: none; color: var(--accent-primary)">${call}</a>`;
             } else {
@@ -324,7 +325,7 @@ foreach ($allConfigs as $c) {
                     .filter(gw => gw.callsign.toUpperCase().includes(gwSearch))
                     .map(gw => `
                         <tr>
-                            <td>${formatCallsign(gw.callsign, gw.name)}</td>
+                            <td>${formatCallsign(gw.callsign, gw.name, '', true)}</td>
                             <td style="color: var(--text-secondary); font-size: 0.75rem">${gw.last_seen.split(' ')[1]}</td>
                         </tr>
                     `).join('');

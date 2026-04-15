@@ -141,6 +141,22 @@ h1 {
     border-color: transparent var(--glass-border) transparent transparent;
 }
 
+.callsign-container.tooltip-left .callsign-tooltip {
+    left: auto;
+    right: 110%;
+    transform: translateY(-50%) translateX(-10px);
+    text-align: right;
+}
+
+.callsign-container.tooltip-left:hover .callsign-tooltip {
+    transform: translateY(-50%) translateX(0);
+}
+
+.callsign-container.tooltip-left .callsign-tooltip::after {
+    right: auto;
+    left: 100%;
+    border-color: transparent transparent transparent var(--glass-border);
+}
 
 .grid {
     display: grid;
