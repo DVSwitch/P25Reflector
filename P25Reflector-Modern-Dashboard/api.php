@@ -25,6 +25,32 @@ if (file_exists($configFile)) {
 // Set error handling to return JSON instead of HTML
 error_reporting(0);
 
+// User Database (Optional)
+$db = null;
+if (class_exists('SQLite3') && file_exists(__DIR__ . "/db/users.db")) {
+    try {
+        $db = new SQLite3(__DIR__ . "/db/users.db", SQLITE3_OPEN_READONLY);
+    } catch (Exception $e) {
+        $db = null;
+    }
+}
+
+function getUserInfo($search) {
+    global $db;
+    if (!$db) return null;
+    
+    try {
+        $query = "SELECT name, city, state, country FROM users WHERE callsign = :val OR id = :val LIMIT 1";
+        $stmt = $db->prepare($query);
+        if (!$stmt) return null;
+        $stmt->bindValue(':val', $search);
+        $res = $stmt->execute();
+        return $res->fetchArray(SQLITE3_ASSOC);
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 /**
  * Security: Sanitize all outputs for XSS prevention
  */
@@ -139,11 +165,18 @@ function getRecentTransmissions($count = 50)
                             }
                         }
 
+                        $userInfo = getUserInfo($callsign);
+                        $city = $userInfo['city'] ?? '';
+                        $state = $userInfo['state'] ?? '';
+                        $location = ($city && $state) ? "$city, $state" : trim("$city $state");
+                        
                         $heardList[] = [
                             'time' => $startTimeStr,
-                            'callsign' => trim($matches[2]),
-                            'gateway' => trim($matches[3]),
-                            'target' => trim($matches[4]),
+                            'callsign' => $callsign,
+                            'name' => $userInfo['name'] ?? '',
+                            'location' => $location,
+                            'target' => $target,
+                            'gateway' => $gateway,
                             'active' => false,
                             'duration' => $duration
                         ];
@@ -197,9 +230,16 @@ function getDashboardData()
                     $target = trim($matches[4]);
                 }
 
+                $userInfo = getUserInfo($callsign);
+                $city = $userInfo['city'] ?? '';
+                $state = $userInfo['state'] ?? '';
+                $location = ($city && $state) ? "$city, $state" : trim("$city $state");
+
                 $transmitting = [
                     'time' => trim($matches[1]),
                     'callsign' => $callsign,
+                    'name' => $userInfo['name'] ?? '',
+                    'location' => $location,
                     'gateway' => $gateway,
                     'target' => $target,
                     'active' => true
@@ -220,7 +260,13 @@ function getDashboardData()
             unset($gateways[$m[1]]);
         }
         if (preg_match('/M: [\d\s:.-]+\s+(\S+)\s+:\s+([\d.:]+)/', $line, $m)) {
-            $gateways[$m[1]] = ['callsign' => trim($m[1]), 'last_seen' => substr($line, 3, 19)];
+             $c = trim($m[1]);
+             $u = getUserInfo($c);
+             $gateways[$c] = [
+                 'callsign' => $c, 
+                 'name' => $u['name'] ?? '',
+                 'last_seen' => substr($line, 3, 19)
+             ];
         }
 
         // Track DVREFCK specifically

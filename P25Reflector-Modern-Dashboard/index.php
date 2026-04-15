@@ -201,9 +201,23 @@ foreach ($allConfigs as $c) {
     <script>
         const SHOW_QRZ = <?php echo (defined("SHOWQRZ") && SHOWQRZ == "1") ? "true" : "false"; ?>;
 
-        function formatCallsign(call) {
-            if (!SHOW_QRZ) return `<span class="callsign">${call}</span>`;
-            return `<a href="https://qrz.com/db/${call}" target="_blank" class="callsign" style="text-decoration: none; color: var(--accent-primary)">${call}</a>`;
+        function formatCallsign(call, name, location) {
+            let html = `<div class="callsign-container">`;
+            if (SHOW_QRZ) {
+                html += `<a href="https://qrz.com/db/${call}" target="_blank" class="callsign" style="text-decoration: none; color: var(--accent-primary)">${call}</a>`;
+            } else {
+                html += `<span class="callsign">${call}</span>`;
+            }
+            if (name) {
+                html += `
+                    <div class="callsign-tooltip">
+                        <div style="font-weight: 800; color: #fff; margin-bottom: 2px;">${name}</div>
+                        ${location ? `<div style="color: var(--accent-color); font-size: 0.65rem; font-weight: 600;">${location}</div>` : ''}
+                    </div>
+                `;
+            }
+            html += `</div>`;
+            return html;
         }
         const CURRENT_CONF = "<?php echo $conf; ?>";
 
@@ -254,7 +268,7 @@ foreach ($allConfigs as $c) {
                     txStatus.style.color = '#ef4444';
                     txBody.innerHTML = `
                         <tr class="tx-active-row">
-                            <td>${formatCallsign(data.transmitting.callsign)}</td>
+                            <td>${formatCallsign(data.transmitting.callsign, data.transmitting.name, data.transmitting.location)}</td>
                             <td>${data.transmitting.target}</td>
                             <td>${data.transmitting.gateway}</td>
                             <td>Active</td>
@@ -280,7 +294,7 @@ foreach ($allConfigs as $c) {
                     .map(item => `
                     <tr>
                         <td style="color: var(--text-secondary)">${item.time.split(' ')[1].substring(0, 8)}</td>
-                        <td>${formatCallsign(item.callsign)}</td>
+                        <td>${formatCallsign(item.callsign, item.name, item.location)}</td>
                         <td>${item.target}</td>
                         <td>${item.gateway}</td>
                         <td>${item.duration}</td>
@@ -297,7 +311,7 @@ foreach ($allConfigs as $c) {
                     .filter(gw => gw.callsign.toUpperCase().includes(gwSearch))
                     .map(gw => `
                         <tr>
-                            <td>${formatCallsign(gw.callsign)}</td>
+                            <td>${formatCallsign(gw.callsign, gw.name)}</td>
                             <td style="color: var(--text-secondary); font-size: 0.75rem">${gw.last_seen.split(' ')[1]}</td>
                         </tr>
                     `).join('');
