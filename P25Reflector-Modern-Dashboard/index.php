@@ -188,7 +188,7 @@ foreach ($allConfigs as $c) {
                     </ul>
                     <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0">
                     <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
-                        P25Reflector by G4KLX<br>
+                        Reflector by G4KLX<br>
                         Dashboard by DVSwitch<br>
                         <span style="opacity: 0.6">Inspired by the original dashboard project</span>
                     </p>

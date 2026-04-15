@@ -45,4 +45,4 @@ A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN**
 - Access to the Reflector log files
 
 ## Credits
-Project by **G4KLX**. Dashboard by **DVSwitch**. Modernized and Optimized for high-volume reflector systems.
+Reflector by **G4KLX**. Dashboard by **DVSwitch**. Modernized and Optimized for high-volume reflector systems.
