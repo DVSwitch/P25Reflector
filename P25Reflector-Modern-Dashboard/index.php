@@ -20,13 +20,14 @@ if (file_exists($configFile)) {
 $allConfigs = glob(__DIR__ . "/config/*.php");
 $reflectors = [];
 foreach ($allConfigs as $c) {
-    if (basename($c) === 'config.php' && count($allConfigs) > 3) continue; // Skip generic config if we have real ones
-    
+    if (basename($c) === 'config.php' && count($allConfigs) > 3)
+        continue; // Skip generic config if we have real ones
+
     $cName = basename($c, '.php');
     $lines = file($c);
     $cTitle = str_replace('_', ' ', $cName); // Smart fallback: Filename with spaces
-    
-    foreach($lines as $line) {
+
+    foreach ($lines as $line) {
         if (preg_match('/define\("DASHBOARD_TITLE",\s*"(.*?)"\)/', $line, $m)) {
             $titleFromConf = $m[1];
             // If the title is too generic, append the Name
@@ -43,6 +44,7 @@ foreach ($allConfigs as $c) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,8 +52,11 @@ foreach ($allConfigs as $c) {
     <link rel="stylesheet" href="index.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto+Mono:wght@500&display=swap"
+        rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -65,19 +70,23 @@ foreach ($allConfigs as $c) {
                             <?php echo DASHBOARD_TITLE; ?>
                         </h1>
                         <?php if (count($reflectors) > 1): ?>
-                        <div class="switcher-dropdown">
-                            <button class="switcher-btn" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; color: var(--accent-color); padding: 5px 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                                <?php echo $conf; ?> <span style="font-size: 0.6rem; margin-left: 4px;">▼</span>
-                            </button>
-                            <div class="switcher-content">
-                                <div style="padding: 0.75rem 1rem; font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase;">Select Reflector</div>
-                                <?php foreach ($reflectors as $r): ?>
-                                    <a href="?conf=<?php echo $r['id']; ?>" class="<?php echo ($conf == $r['id']) ? 'active' : ''; ?>">
-                                        <?php echo $r['title']; ?>
-                                    </a>
-                                <?php endforeach; ?>
+                            <div class="switcher-dropdown">
+                                <button class="switcher-btn"
+                                    style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; color: var(--accent-color); padding: 5px 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                                    <?php echo $conf; ?> <span style="font-size: 0.6rem; margin-left: 4px;">▼</span>
+                                </button>
+                                <div class="switcher-content">
+                                    <div
+                                        style="padding: 0.75rem 1rem; font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase;">
+                                        Select Reflector</div>
+                                    <?php foreach ($reflectors as $r): ?>
+                                        <a href="?conf=<?php echo $r['id']; ?>"
+                                            class="<?php echo ($conf == $r['id']) ? 'active' : ''; ?>">
+                                            <?php echo $r['title']; ?>
+                                        </a>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                        </div>
                         <?php endif; ?>
                     </div>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; opacity: 0.8;">
@@ -109,7 +118,10 @@ foreach ($allConfigs as $c) {
                             </tr>
                         </thead>
                         <tbody id="current-tx-body">
-                            <tr><td colspan="4" style="text-align:center; color: var(--text-secondary)">Searching logs...</td></tr>
+                            <tr>
+                                <td colspan="4" style="text-align:center; color: var(--text-secondary)">Searching
+                                    logs...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -117,7 +129,8 @@ foreach ($allConfigs as $c) {
                 <div class="card">
                     <div class="card-title">
                         <span>Last Heard</span>
-                        <input type="text" id="lh-search" placeholder="Search..." style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); width: 100px;">
+                        <input type="text" id="lh-search" placeholder="Search..."
+                            style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); width: 100px;">
                     </div>
                     <div style="max-height: 450px; overflow-y: auto; scrollbar-width: thin; border-radius: 8px;">
                         <table>
@@ -137,13 +150,14 @@ foreach ($allConfigs as $c) {
                     </div>
                 </div>
 
-                <?php if(defined("SHOW_NETWORK_PULSE") && SHOW_NETWORK_PULSE == "1"): ?>
-                <div class="card" style="margin-top: 2rem">
-                    <div class="card-title">Network Pulse</div>
-                    <div id="event-log" style="font-size: 0.75rem; color: var(--text-secondary); max-height: 150px; overflow-y: auto;">
-                        <!-- Populated via JS -->
+                <?php if (defined("SHOW_NETWORK_PULSE") && SHOW_NETWORK_PULSE == "1"): ?>
+                    <div class="card" style="margin-top: 2rem">
+                        <div class="card-title">Network Pulse</div>
+                        <div id="event-log"
+                            style="font-size: 0.75rem; color: var(--text-secondary); max-height: 150px; overflow-y: auto;">
+                            <!-- Populated via JS -->
+                        </div>
                     </div>
-                </div>
                 <?php endif; ?>
             </section>
 
@@ -151,9 +165,10 @@ foreach ($allConfigs as $c) {
                 <div class="card">
                     <div class="card-title">
                         <span>Gateways (<span id="gw-count">0</span>)</span>
-                        <input type="text" id="gw-search" placeholder="Search..." style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); width: 100px;">
+                        <input type="text" id="gw-search" placeholder="Search..."
+                            style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); width: 100px;">
                     </div>
-                    <div style="max-height: 280px; overflow-y: auto; scrollbar-width: thin;">
+                    <div style="max-height: 280px; overflow-y: auto; scrollbar-width: thin; padding-bottom: 50px;">
                         <table>
                             <thead>
                                 <tr>
@@ -167,43 +182,47 @@ foreach ($allConfigs as $c) {
                         </table>
                     </div>
                 </div>
-                
-                <?php if(defined("SHOW_SYSTEM_STATS") && SHOW_SYSTEM_STATS == "1"): ?>
-                <div class="card" style="margin-top: 2rem; background: rgba(56, 189, 248, 0.05)">
-                    <div class="card-title" style="font-size: 0.875rem">System Stats</div>
-                    <ul id="system-stats-list" style="list-style: none; font-size: 0.875rem; color: var(--text-secondary)">
-                        <li id="row-profile" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>Active Profile</span>
-                            <span id="sys-profile" style="color: var(--text-primary); font-weight: 600">--</span>
-                        </li>
-                        <li id="row-port" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>Network Port</span>
-                            <span id="sys-port" style="color: var(--text-primary)">--</span>
-                        </li>
-                        <li id="row-temp" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>CPU Temp</span>
-                            <span id="sys-temp" style="color: var(--text-primary)">--</span>
-                        </li>
-                        <li id="row-load" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>System Load</span>
-                            <span id="sys-load" style="color: var(--text-primary)">--</span>
-                        </li>
-                        <li id="row-checkin" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>DVRef Check-in</span>
-                            <span id="sys-checkin" style="color: var(--text-primary)">--</span>
-                        </li>
-                        <li id="row-uptime" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>Uptime</span>
-                            <span id="sys-uptime" style="color: var(--text-primary)">--</span>
-                        </li>
-                    </ul>
-                    <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0">
-                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
-                        Reflector by G4KLX<br>
-                        Dashboard by DVSwitch<br>
-                        <span style="opacity: 0.6">Inspired by the original dashboard project</span>
-                    </p>
-                </div>
+
+                <?php if (defined("SHOW_SYSTEM_STATS") && SHOW_SYSTEM_STATS == "1"): ?>
+                    <div class="card" style="margin-top: 2rem; background: rgba(56, 189, 248, 0.05)">
+                        <div class="card-title" style="font-size: 0.875rem">System Stats</div>
+                        <ul id="system-stats-list"
+                            style="list-style: none; font-size: 0.875rem; color: var(--text-secondary)">
+                            <li id="row-profile"
+                                style="display: flex; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>Active Profile</span>
+                                <span id="sys-profile" style="color: var(--text-primary); font-weight: 600">--</span>
+                            </li>
+                            <li id="row-port" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>Network Port</span>
+                                <span id="sys-port" style="color: var(--text-primary)">--</span>
+                            </li>
+                            <li id="row-temp" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>CPU Temp</span>
+                                <span id="sys-temp" style="color: var(--text-primary)">--</span>
+                            </li>
+                            <li id="row-load" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>System Load</span>
+                                <span id="sys-load" style="color: var(--text-primary)">--</span>
+                            </li>
+                            <li id="row-checkin"
+                                style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>DVRef Check-in</span>
+                                <span id="sys-checkin" style="color: var(--text-primary)">--</span>
+                            </li>
+                            <li id="row-uptime"
+                                style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>Uptime</span>
+                                <span id="sys-uptime" style="color: var(--text-primary)">--</span>
+                            </li>
+                        </ul>
+                        <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
+                            Reflector by G4KLX<br>
+                            Dashboard by DVSwitch<br>
+                            <span style="opacity: 0.6">Inspired by the original dashboard project</span>
+                        </p>
+                    </div>
                 <?php endif; ?>
             </aside>
         </main>
@@ -212,8 +231,8 @@ foreach ($allConfigs as $c) {
     <script>
         const SHOW_QRZ = <?php echo (defined("SHOWQRZ") && SHOWQRZ == "1") ? "true" : "false"; ?>;
 
-        function formatCallsign(call, name, location, isLeft = false) {
-            let containerClass = isLeft ? "callsign-container tooltip-left" : "callsign-container";
+        function formatCallsign(call, name, location, isDown = false) {
+            let containerClass = isDown ? "callsign-container tooltip-down" : "callsign-container";
             let html = `<div class="${containerClass}">`;
             if (SHOW_QRZ) {
                 html += `<a href="https://qrz.com/db/${call}" target="_blank" class="callsign" style="text-decoration: none; color: var(--accent-primary)">${call}</a>`;
@@ -263,7 +282,7 @@ foreach ($allConfigs as $c) {
                     const row = document.getElementById(`row-${key}`);
                     const valEl = document.getElementById(`sys-${key}`);
                     if (!row || !valEl) continue; // Skip if card is disabled
-                    
+
                     if (value && value !== '--' && value !== '0h' && value !== '0.0°C') {
                         valEl.innerText = value;
                         row.style.display = 'flex';
@@ -275,7 +294,7 @@ foreach ($allConfigs as $c) {
                 // Update Transmitting
                 const txBody = document.getElementById('current-tx-body');
                 const txStatus = document.getElementById('tx-status');
-                
+
                 if (data.transmitting) {
                     txStatus.innerText = 'TRANSMITTING';
                     txStatus.style.background = 'rgba(239, 68, 68, 0.2)';
@@ -300,9 +319,9 @@ foreach ($allConfigs as $c) {
                 const lhSearch = document.getElementById('lh-search').value.toUpperCase();
 
                 lhBody.innerHTML = data.heard
-                    .filter(item => 
-                        item.callsign.toUpperCase().includes(lhSearch) || 
-                        item.target.toUpperCase().includes(lhSearch) || 
+                    .filter(item =>
+                        item.callsign.toUpperCase().includes(lhSearch) ||
+                        item.target.toUpperCase().includes(lhSearch) ||
                         item.gateway.toUpperCase().includes(lhSearch)
                     )
                     .map(item => `
@@ -318,14 +337,14 @@ foreach ($allConfigs as $c) {
                 // Update Gateways
                 const gwBody = document.getElementById('gateways-body');
                 const gwSearch = document.getElementById('gw-search').value.toUpperCase();
-                
+
                 document.getElementById('gw-count').innerText = data.gateways.length;
 
                 gwBody.innerHTML = data.gateways
                     .filter(gw => gw.callsign.toUpperCase().includes(gwSearch))
                     .map(gw => `
                         <tr>
-                            <td>${formatCallsign(gw.callsign, gw.name, '', true)}</td>
+                            <td>${formatCallsign(gw.callsign, gw.name)}</td>
                             <td style="color: var(--text-secondary); font-size: 0.75rem">${gw.last_seen.split(' ')[1]}</td>
                         </tr>
                     `).join('');
@@ -352,4 +371,5 @@ foreach ($allConfigs as $c) {
         setInterval(updateDashboard, REFRESH_INTERVAL);
     </script>
 </body>
+
 </html>

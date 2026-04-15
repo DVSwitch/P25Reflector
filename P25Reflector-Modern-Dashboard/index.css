@@ -102,9 +102,9 @@ h1 {
 
 .callsign-tooltip {
     position: absolute;
-    top: 50%;
-    left: 110%;
-    transform: translateY(-50%) translateX(10px);
+    top: 120%;
+    left: 50%;
+    transform: translateY(-10px) translateX(-50%);
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(15px);
     border: 1px solid var(--glass-border);
@@ -121,43 +121,25 @@ h1 {
     color: #fff;
     font-size: 0.75rem;
     line-height: 1.4;
-    text-align: left;
+    text-align: center;
 }
 
 .callsign-container:hover .callsign-tooltip {
     opacity: 1;
     visibility: visible;
-    transform: translateY(-50%) translateX(0);
+    transform: translateY(0) translateX(-50%);
 }
 
 .callsign-tooltip::after {
     content: '';
     position: absolute;
-    top: 50%;
-    right: 100%;
-    margin-top: -5px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: transparent var(--glass-border) transparent transparent;
+    border-color: transparent transparent var(--glass-border) transparent;
 }
-
-.callsign-container.tooltip-left .callsign-tooltip {
-    left: auto;
-    right: 110%;
-    transform: translateY(-50%) translateX(-10px);
-    text-align: right;
-}
-
-.callsign-container.tooltip-left:hover .callsign-tooltip {
-    transform: translateY(-50%) translateX(0);
-}
-
-.callsign-container.tooltip-left .callsign-tooltip::after {
-    right: auto;
-    left: 100%;
-    border-color: transparent transparent transparent var(--glass-border);
-}
-
 .grid {
     display: grid;
     grid-template-columns: 1fr 300px;
