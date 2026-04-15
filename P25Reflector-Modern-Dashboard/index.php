@@ -126,7 +126,7 @@ include "config/config.php";
                             <span id="sys-load" style="color: var(--text-primary)">--</span>
                         </li>
                         <li id="row-checkin" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
-                            <span>Last Check-in</span>
+                            <span>DVRef Check-in</span>
                             <span id="sys-checkin" style="color: var(--text-primary)">--</span>
                         </li>
                         <li id="row-uptime" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
