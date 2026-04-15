@@ -40,7 +40,7 @@ function getUserInfo($search) {
     if (!$db) return null;
     
     try {
-        $query = "SELECT name, city, state, country FROM users WHERE callsign = :val OR id = :val LIMIT 1";
+        $query = "SELECT callsign, name, city, state, country FROM users WHERE callsign = :val OR id = :val LIMIT 1";
         $stmt = $db->prepare($query);
         if (!$stmt) return null;
         $stmt->bindValue(':val', $search);
@@ -166,13 +166,14 @@ function getRecentTransmissions($count = 50)
                         }
 
                         $userInfo = getUserInfo($callsign);
+                        $displayCallsign = $userInfo['callsign'] ?? $callsign;
                         $city = $userInfo['city'] ?? '';
                         $state = $userInfo['state'] ?? '';
                         $location = ($city && $state) ? "$city, $state" : trim("$city $state");
                         
                         $heardList[] = [
                             'time' => $startTimeStr,
-                            'callsign' => $callsign,
+                            'callsign' => $displayCallsign,
                             'name' => $userInfo['name'] ?? '',
                             'location' => $location,
                             'target' => $target,
@@ -231,13 +232,14 @@ function getDashboardData()
                 }
 
                 $userInfo = getUserInfo($callsign);
+                $displayCallsign = $userInfo['callsign'] ?? $callsign;
                 $city = $userInfo['city'] ?? '';
                 $state = $userInfo['state'] ?? '';
                 $location = ($city && $state) ? "$city, $state" : trim("$city $state");
 
                 $transmitting = [
                     'time' => trim($matches[1]),
-                    'callsign' => $callsign,
+                    'callsign' => $displayCallsign,
                     'name' => $userInfo['name'] ?? '',
                     'location' => $location,
                     'gateway' => $gateway,
