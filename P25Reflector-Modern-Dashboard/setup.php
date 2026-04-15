@@ -13,7 +13,7 @@ function prompt($label, $default) {
     return $input ?: $default;
 }
 
-// Check for Bulk Mode vs Single File
+// 1. Scan for Reflectors
 $path = $argv[1] ?? "./";
 $reflectorsFound = [];
 
@@ -30,24 +30,37 @@ if (is_dir($path)) {
             $isNotNode = (strpos($content, '[Modem]') === false);
             
             if ($hasLog && $hasMode && $isNotNode) {
-                // Priority 1: Check Content for Protocol Headers/Keywords
+                // Initialize explicitly
+                $foundMode = 'Generic';
                 $contentUpper = strtoupper($content);
-                if (stripos($content, '[P25') !== false || stripos($content, 'P25Id') !== false) $mode = 'P25';
-                elseif (stripos($content, '[YSF') !== false || stripos($content, 'YSFId') !== false) $mode = 'YSF';
-                elseif (stripos($content, '[NXDN') !== false || stripos($content, 'NXDNId') !== false) $mode = 'NXDN';
-                elseif (stripos($content, '[DMR') !== false || stripos($content, 'DMRId') !== false) $mode = 'DMR';
+                $fileUpper = strtoupper($file->getFilename());
+                $dirUpper = strtoupper($file->getPath());
+
+                // Priority 1: Check Content
+                if (stripos($content, '[P25') !== false || stripos($content, 'P25Id') !== false) $foundMode = 'P25';
+                elseif (stripos($content, '[YSF') !== false || stripos($content, 'YSFId') !== false) $foundMode = 'YSF';
+                elseif (stripos($content, '[NXDN') !== false || stripos($content, 'NXDNId') !== false) $foundMode = 'NXDN';
+                elseif (stripos($content, '[DMR') !== false || stripos($content, 'DMRId') !== false || stripos($content, '[DMR') !== false) $foundMode = 'DMR';
                 
-                // Priority 2: Check Filename Fallback
-                if ($mode === 'Generic') {
-                    $fileUpper = strtoupper($file->getFilename());
-                    if (strpos($fileUpper, 'P25') !== false) $mode = 'P25';
-                    elseif (strpos($fileUpper, 'YSF') !== false) $mode = 'YSF';
-                    elseif (strpos($fileUpper, 'NXDN') !== false) $mode = 'NXDN';
-                    elseif (strpos($fileUpper, 'DMR') !== false) $mode = 'DMR';
+                // Priority 2: Check Filename
+                if ($foundMode === 'Generic') {
+                    if (strpos($fileUpper, 'P25') !== false) $foundMode = 'P25';
+                    elseif (strpos($fileUpper, 'YSF') !== false) $foundMode = 'YSF';
+                    elseif (strpos($fileUpper, 'NXDN') !== false) $foundMode = 'NXDN';
+                    elseif (strpos($fileUpper, 'DMR') !== false) $foundMode = 'DMR';
+                }
+
+                // Priority 3: Check Directory Name
+                if ($foundMode === 'Generic') {
+                    if (strpos($dirUpper, 'P25') !== false) $foundMode = 'P25';
+                    elseif (strpos($dirUpper, 'YSF') !== false) $foundMode = 'YSF';
+                    elseif (strpos($dirUpper, 'NXDN') !== false) $foundMode = 'NXDN';
+                    elseif (strpos($dirUpper, 'DMR') !== false) $foundMode = 'DMR';
                 }
 
                 // Extract actual prefix from FileRoot
                 $prefix = basename($file->getFilename(), '.ini');
+                $lines = explode("\n", $content);
                 foreach ($lines as $line) {
                     if (preg_match('/^\s*FileRoot\s*=\s*(.*)/i', $line, $pm)) {
                         $prefix = trim($pm[1]);
@@ -60,7 +73,7 @@ if (is_dir($path)) {
                     'dir' => $file->getPath(),
                     'file' => $file->getFilename(),
                     'prefix' => $prefix,
-                    'mode' => $mode
+                    'mode' => $foundMode
                 ];
             }
         }
@@ -90,7 +103,10 @@ $selectedIndices = [];
 if ($selection === 'all') {
     $selectedIndices = range(0, count($reflectorsFound) - 1);
 } else {
-    foreach (explode(',', $selection) as $idx) $selectedIndices[] = (int)trim($idx) - 1;
+    foreach (explode(',', $selection) as $idx) {
+        $v = (int)trim($idx);
+        if ($v > 0) $selectedIndices[] = $v - 1;
+    }
 }
 
 $logPathDefault = "/var/log/mmdvm";
@@ -152,5 +168,4 @@ EOD;
 }
 
 echo "\nDone! All selected reflectors have been configured.\n\n";
-
 ?>
