@@ -311,10 +311,25 @@ function getSystemData()
         }
     }
     
-    // CPU Temp
-    if (file_exists("/sys/class/thermal/thermal_zone0/temp")) {
-        $temp = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
-        $data['temp'] = round($temp / 1000, 1) . '°C';
+    // CPU Temp (Smart Search for x86_pkg_temp or acpitz)
+    $tempValue = null;
+    $zones = glob("/sys/class/thermal/thermal_zone*");
+    foreach ($zones as $zone) {
+        $type = @file_get_contents("$zone/type");
+        if ($type !== false) {
+            $type = trim($type);
+            if ($type === 'x86_pkg_temp' || $type === 'acpitz') {
+                $t = @file_get_contents("$zone/temp");
+                if ($t !== false && is_numeric(trim($t))) {
+                    $tempValue = (int)trim($t);
+                    if ($type === 'x86_pkg_temp') break; // Prioritize Package Temp
+                }
+            }
+        }
+    }
+
+    if ($tempValue !== null) {
+        $data['temp'] = round($tempValue / 1000, 1) . '°C';
     }
 
     // Load Average
