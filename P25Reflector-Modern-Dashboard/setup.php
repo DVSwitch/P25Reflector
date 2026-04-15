@@ -7,7 +7,8 @@
 echo "\n--- DVSwitch Universal Dashboard Setup ---\n\n";
 
 // Extraction Helper
-function prompt($label, $default) {
+function prompt($label, $default)
+{
     echo "$label [$default]: ";
     $input = trim(fgets(STDIN));
     return $input ?: $default;
@@ -23,12 +24,12 @@ if (is_dir($path)) {
     foreach ($files as $file) {
         if ($file->getExtension() === 'ini') {
             $content = file_get_contents($file->getPathname());
-            
+
             // The Reflector Signature (Flexible): Has [Log], FileRoot, a Mode Section, NO [Modem]
             $hasLog = (preg_match('/\[Log\]/i', $content) && preg_match('/FileRoot\s*=/i', $content));
             $hasMode = (preg_match('/\[(P25|YSF|NXDN|DMR|General)\]/i', $content));
             $isNotNode = (strpos($content, '[Modem]') === false);
-            
+
             if ($hasLog && $hasMode && $isNotNode) {
                 // Initialize explicitly
                 $foundMode = 'Generic';
@@ -36,13 +37,22 @@ if (is_dir($path)) {
                 $fileUpper = strtoupper($file->getFilename());
                 $dirUpper = strtoupper($file->getPath());
 
-                // Priority 1: Check Content
-                if (stripos($content, '[P25') !== false || stripos($content, 'P25Id') !== false) $foundMode = 'P25';
-                elseif (stripos($content, '[YSF') !== false || stripos($content, 'YSFId') !== false) $foundMode = 'YSF';
-                elseif (stripos($content, '[NXDN') !== false || stripos($content, 'NXDNId') !== false) $foundMode = 'NXDN';
-                elseif (stripos($content, '[DMR') !== false || stripos($content, 'DMRId') !== false || stripos($content, '[DMR') !== false) $foundMode = 'DMR';
-                
-                // Priority 2: Check Filename
+                // Priority 1: Binary Neighbor (Highest Confidence)
+                $binPath = $file->getPath();
+                if (file_exists("$binPath/P25Reflector")) $foundMode = 'P25';
+                elseif (file_exists("$binPath/YSFReflector")) $foundMode = 'YSF';
+                elseif (file_exists("$binPath/NXDNReflector")) $foundMode = 'NXDN';
+                elseif (file_exists("$binPath/DMRReflector")) $foundMode = 'DMR';
+
+                // Priority 2: Check Content for Section Headers (If binary missing)
+                if ($foundMode === 'Generic') {
+                    if (stripos($content, '[P25') !== false) $foundMode = 'P25';
+                    elseif (stripos($content, '[YSF') !== false) $foundMode = 'YSF';
+                    elseif (stripos($content, '[NXDN') !== false) $foundMode = 'NXDN';
+                    elseif (stripos($content, '[DMR') !== false) $foundMode = 'DMR';
+                }
+
+                // Priority 3: Check Filename Fallback
                 if ($foundMode === 'Generic') {
                     if (strpos($fileUpper, 'P25') !== false) $foundMode = 'P25';
                     elseif (strpos($fileUpper, 'YSF') !== false) $foundMode = 'YSF';
@@ -50,9 +60,13 @@ if (is_dir($path)) {
                     elseif (strpos($fileUpper, 'DMR') !== false) $foundMode = 'DMR';
                 }
 
-                // Priority 3: Check Directory Name
+                // Priority 4: Final Keywords and Directory Fallback
                 if ($foundMode === 'Generic') {
-                    if (strpos($dirUpper, 'P25') !== false) $foundMode = 'P25';
+                    if (stripos($content, 'P25Id') !== false) $foundMode = 'P25';
+                    elseif (stripos($content, 'YSFId') !== false) $foundMode = 'YSF';
+                    elseif (stripos($content, 'NXDNId') !== false) $foundMode = 'NXDN';
+                    elseif (stripos($content, 'DMRId') !== false) $foundMode = 'DMR';
+                    elseif (strpos($dirUpper, 'P25') !== false) $foundMode = 'P25';
                     elseif (strpos($dirUpper, 'YSF') !== false) $foundMode = 'YSF';
                     elseif (strpos($dirUpper, 'NXDN') !== false) $foundMode = 'NXDN';
                     elseif (strpos($dirUpper, 'DMR') !== false) $foundMode = 'DMR';
@@ -104,8 +118,9 @@ if ($selection === 'all') {
     $selectedIndices = range(0, count($reflectorsFound) - 1);
 } else {
     foreach (explode(',', $selection) as $idx) {
-        $v = (int)trim($idx);
-        if ($v > 0) $selectedIndices[] = $v - 1;
+        $v = (int) trim($idx);
+        if ($v > 0)
+            $selectedIndices[] = $v - 1;
     }
 }
 
@@ -113,14 +128,15 @@ $logPathDefault = "/var/log/mmdvm";
 $logPath = prompt("\nBase directory for logs", $logPathDefault);
 
 foreach ($selectedIndices as $idx) {
-    if (!isset($reflectorsFound[$idx])) continue;
+    if (!isset($reflectorsFound[$idx]))
+        continue;
     $r = $reflectorsFound[$idx];
-    
+
     echo "\nConfiguring {$r['file']}...\n";
     $confName = prompt("  Configuration Profile Name", $r['prefix']);
     $title = prompt("  Dashboard Title", "{$r['mode']} Reflector");
     $prefix = prompt("  Log Prefix", $r['prefix']);
-    
+
     $configTemplate = <<<EOD
 <?php
 /**
