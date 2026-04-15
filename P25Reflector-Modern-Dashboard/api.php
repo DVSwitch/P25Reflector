@@ -351,5 +351,6 @@ function getSystemData()
 
 $data = getDashboardData(REFLECTOR_LOG_PREFIX);
 $data['system'] = getSystemData();
+$data['conf'] = str_replace('_Reflector', '', REFLECTOR_LOG_PREFIX);
 echo json_encode(sanitize($data));
 ?>

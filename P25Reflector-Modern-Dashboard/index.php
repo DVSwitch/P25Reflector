@@ -172,6 +172,10 @@ foreach ($allConfigs as $c) {
                 <div class="card" style="margin-top: 2rem; background: rgba(56, 189, 248, 0.05)">
                     <div class="card-title" style="font-size: 0.875rem">System Stats</div>
                     <ul id="system-stats-list" style="list-style: none; font-size: 0.875rem; color: var(--text-secondary)">
+                        <li id="row-profile" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem">
+                            <span>Active Profile</span>
+                            <span id="sys-profile" style="color: var(--text-primary); font-weight: 600">--</span>
+                        </li>
                         <li id="row-port" style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
                             <span>Network Port</span>
                             <span id="sys-port" style="color: var(--text-primary)">--</span>
@@ -246,6 +250,7 @@ foreach ($allConfigs as $c) {
 
                 // Update System Stats
                 const stats = {
+                    'profile': data.conf,
                     'temp': data.system.temp,
                     'load': data.system.load,
                     'uptime': data.system.uptime,
