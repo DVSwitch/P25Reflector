@@ -30,15 +30,20 @@ if (is_dir($path)) {
             $isNotNode = (strpos($content, '[Modem]') === false);
             
             if ($hasLog && $hasMode && $isNotNode) {
-                // Use a more robust INI parser replacement
-                $lines = explode("\n", $content);
-                $mode = 'Generic';
-                foreach ($lines as $line) {
-                    $trimLine = trim($line);
-                    if (preg_match('/\[.*?(P25|YSF|NXDN|DMR).*?\]/i', $trimLine, $m)) {
-                        $mode = strtoupper($m[1]);
-                        break;
-                    }
+                // Priority 1: Check Content for Protocol Headers/Keywords
+                $contentUpper = strtoupper($content);
+                if (stripos($content, '[P25') !== false || stripos($content, 'P25Id') !== false) $mode = 'P25';
+                elseif (stripos($content, '[YSF') !== false || stripos($content, 'YSFId') !== false) $mode = 'YSF';
+                elseif (stripos($content, '[NXDN') !== false || stripos($content, 'NXDNId') !== false) $mode = 'NXDN';
+                elseif (stripos($content, '[DMR') !== false || stripos($content, 'DMRId') !== false) $mode = 'DMR';
+                
+                // Priority 2: Check Filename Fallback
+                if ($mode === 'Generic') {
+                    $fileUpper = strtoupper($file->getFilename());
+                    if (strpos($fileUpper, 'P25') !== false) $mode = 'P25';
+                    elseif (strpos($fileUpper, 'YSF') !== false) $mode = 'YSF';
+                    elseif (strpos($fileUpper, 'NXDN') !== false) $mode = 'NXDN';
+                    elseif (strpos($fileUpper, 'DMR') !== false) $mode = 'DMR';
                 }
 
                 // Extract actual prefix from FileRoot
