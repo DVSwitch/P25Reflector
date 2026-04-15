@@ -1,6 +1,6 @@
 # DVSwitch Universal Reflector Dashboard (Modernized)
 
-A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN** reflectors. Optimized for the DVSwitch ecosystem.
+A high-performance, mode-agnostic real-time dashboard for **P25, YSF, and NXDN** reflectors. Optimized for the MMDVM ecosystem.
 
 ## Key Features
 - **Universal Mode Support**: Automatically detects and parses logs for P25, YSF, and NXDN.
