@@ -4,6 +4,8 @@
  * Usage: php setup.php [path/to/Reflector.ini]
  */
 
+if (php_sapi_name() !== 'cli') { die('This script must be run from the command line.'); }
+
 echo "\n--- DVSwitch Universal Dashboard Setup ---\n\n";
 
 // Extraction Helper
