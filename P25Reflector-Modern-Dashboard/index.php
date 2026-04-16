@@ -222,6 +222,11 @@ foreach ($allConfigs as $c) {
                                 <span>Uptime</span>
                                 <span id="sys-uptime" style="color: var(--text-primary)">--</span>
                             </li>
+                            <li id="row-disk"
+                                style="display: none; justify-content: space-between; margin-bottom: 0.5rem">
+                                <span>Disk Usage</span>
+                                <span id="sys-disk" style="color: var(--text-primary)">--</span>
+                            </li>
                         </ul>
                         <hr style="border: 0; border-top: 1px solid var(--glass-border); margin: 1rem 0">
                         <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center;">
@@ -289,6 +294,7 @@ foreach ($allConfigs as $c) {
                     'load': data.system.load,
                     'uptime': data.system.uptime,
                     'port': data.system.port,
+                    'disk': data.system.disk,
                     'checkin': data.last_checkin ? data.last_checkin.split(' ')[1] : '--'
                 };
 

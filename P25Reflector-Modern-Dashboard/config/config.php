@@ -22,6 +22,7 @@ define("REFLECTOR_BIN_PATH", "/home/szingman/dvswitch_projects/P25Reflector/");
 define("SHOWQRZ", "1");
 define("SHOW_SYSTEM_STATS", "1");
 define("SHOW_NETWORK_PULSE", "1");
+define("GDPR_MODE", "0");  // Set to "1" to anonymize callsigns for GDPR compliance
 
 // --- 4. Advanced Settings ---
 define("API_REFRESH_INTERVAL", "2000");

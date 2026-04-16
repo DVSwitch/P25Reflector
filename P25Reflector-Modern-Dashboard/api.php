@@ -299,7 +299,8 @@ function getSystemData()
         'temp' => '--',
         'load' => '--',
         'uptime' => '--',
-        'port' => '--'
+        'port' => '--',
+        'disk' => '--'
     ];
 
     // Reflector Port from INI
@@ -348,11 +349,53 @@ function getSystemData()
         $data['uptime'] = ($days > 0 ? $days . 'd ' : '') . $hours . 'h';
     }
 
+    // Disk Usage
+    $diskTotal = @disk_total_space('/');
+    $diskFree = @disk_free_space('/');
+    if ($diskTotal && $diskFree) {
+        $diskUsed = $diskTotal - $diskFree;
+        $pct = round(($diskUsed / $diskTotal) * 100, 1);
+        $usedGB = round($diskUsed / 1073741824, 1);
+        $totalGB = round($diskTotal / 1073741824, 1);
+        $data['disk'] = "{$usedGB} / {$totalGB} GB ({$pct}%)";
+    }
+
     return $data;
 }
 
 $data = getDashboardData(REFLECTOR_LOG_PREFIX);
 $data['system'] = getSystemData();
 $data['conf'] = str_replace('_Reflector', '', REFLECTOR_LOG_PREFIX);
+
+// GDPR Callsign Anonymization
+if (defined("GDPR_MODE") && GDPR_MODE == "1") {
+    $mask = function($cs) {
+        if (strlen($cs) <= 2) return $cs;
+        return substr($cs, 0, 2) . str_repeat('*', strlen($cs) - 2);
+    };
+    if (!empty($data['heard'])) {
+        foreach ($data['heard'] as &$h) {
+            $h['callsign'] = $mask($h['callsign']);
+            $h['gateway'] = $mask($h['gateway']);
+            $h['name'] = '';
+            $h['location'] = '';
+        }
+        unset($h);
+    }
+    if (!empty($data['transmitting'])) {
+        $data['transmitting']['callsign'] = $mask($data['transmitting']['callsign']);
+        $data['transmitting']['gateway'] = $mask($data['transmitting']['gateway']);
+        $data['transmitting']['name'] = '';
+        $data['transmitting']['location'] = '';
+    }
+    if (!empty($data['gateways'])) {
+        foreach ($data['gateways'] as &$gw) {
+            $gw['callsign'] = $mask($gw['callsign']);
+            $gw['name'] = '';
+        }
+        unset($gw);
+    }
+}
+
 echo json_encode(sanitize($data));
 ?>

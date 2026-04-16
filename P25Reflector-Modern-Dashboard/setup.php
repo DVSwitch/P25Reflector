@@ -159,6 +159,7 @@ define("REFLECTOR_BIN_PATH", "%s/");
 define("SHOWQRZ", "1");
 define("SHOW_SYSTEM_STATS", "1");
 define("SHOW_NETWORK_PULSE", "1");
+define("GDPR_MODE", "0");  // Set to "1" to anonymize callsigns for GDPR compliance
 
 define("API_REFRESH_INTERVAL", "2000");
 define("LAST_HEARD_COUNT", "50");
