@@ -1,0 +1,19 @@
+[Unit]
+Description=P25 Reflector Service
+# Description=Place this file in /lib/systemd/system
+# Description=N4IRS 01/21/2022
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartPreventExitStatus=SEGV
+RestartSec=3
+StandardOutput=null
+WorkingDirectory=/opt/P25Reflector
+ExecStart=/opt/P25Reflector/P25Reflector /opt/P25Reflector/P25Reflector.ini
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+
